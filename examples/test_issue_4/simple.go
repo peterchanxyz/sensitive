@@ -3,11 +3,14 @@ package main
 import (
 	"fmt"
 
-	"github.com/importcjj/sensitive"
+	"github.com/peterchanxyz/sensitive"
 )
 
 func main() {
 	filter := sensitive.New()
-	filter.LoadWordDict("../../dict/dict.txt")
-	fmt.Println(filter.Replace("xC4x", '*'))
+	filter.LoadWordDict("../../dict/dict2.txt")
+	fmt.Println(filter.ValidateWithWildcard("刘一上三台啊", '*'))
+	fmt.Println(filter.ValidateWithWildcard("哈哈哈刘一上三", '*'))
+	fmt.Println(filter.ValidateWithWildcard("哈哈哈刘一上三台", '*'))
+	fmt.Println(filter.ValidateWithWildcard("哈哈哈刘一上三台，你是个小白鼠", '*'))
 }

@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/importcjj/sensitive"
+	"github.com/peterchanxyz/sensitive"
 )
 
 func main() {

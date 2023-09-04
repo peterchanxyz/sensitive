@@ -2,10 +2,12 @@ package sensitive
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -41,8 +43,13 @@ func (filter *Filter) LoadWordDict(path string) error {
 
 // LoadNetWordDict 加载网络敏感词字典
 func (filter *Filter) LoadNetWordDict(url string) error {
+	return filter.LoadNetWordDictTimeout(url, false, 5000)
+}
+
+// LoadNetWordDictTimeout 加载网络敏感词字典，带超时设置
+func (filter *Filter) LoadNetWordDictTimeout(url string, allowHtml bool, timeout int) error {
 	c := http.Client{
-		Timeout: 5 * time.Second,
+		Timeout: time.Duration(timeout) * time.Millisecond,
 	}
 	rsp, err := c.Get(url)
 	if err != nil {
@@ -50,6 +57,15 @@ func (filter *Filter) LoadNetWordDict(url string) error {
 	}
 	defer rsp.Body.Close()
 
+	if rsp.StatusCode >= 400 {
+		text := http.StatusText(rsp.StatusCode)
+		return fmt.Errorf(text)
+	} else if allowHtml == false {
+		value := strings.ToLower(rsp.Header.Get("Content-Type"))
+		if strings.Contains(value, "html") {
+			return fmt.Errorf("html is not allowed.")
+		}
+	}
 	return filter.Load(rsp.Body)
 }
 
@@ -105,6 +121,11 @@ func (filter *Filter) FindAll(text string) []string {
 func (filter *Filter) Validate(text string) (bool, string) {
 	text = filter.RemoveNoise(text)
 	return filter.trie.Validate(text)
+}
+
+func (filter *Filter) ValidateWithWildcard(text string, wildcard rune) (bool, string) {
+	text = filter.RemoveNoise(text)
+	return filter.trie.ValidateWithWildcard(text, wildcard)
 }
 
 // RemoveNoise 去除空格等噪音
